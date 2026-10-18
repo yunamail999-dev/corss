@@ -4,10 +4,10 @@
  */
 
 :root {
-  /* 視窗自適應尺寸：棋盤依螢幕可用寬高動態計算，兼顧電腦大屏與手機折疊屏，上限大氣放寬 */
-  --cell-size: clamp(36px, min(calc((100vh - 135px) / 10.2), calc((100vw - 500px) / 8.3)), 78px);
-  --piece-size: calc(var(--cell-size) * 0.90);
-  --small-cell-size: clamp(46px, min(calc((100vh - 155px) / 4.8), calc((100vw - 500px) / 8.3)), 88px);
+  /* 視窗自適應尺寸：兼顧全覽與清晰大氣，防止文字切邊 */
+  --cell-size: clamp(34px, min(calc((100vh - 140px) / 10.4), calc((100vw - 520px) / 9.2)), 66px);
+  --piece-size: calc(var(--cell-size) * 0.88);
+  --small-cell-size: clamp(42px, min(calc((100vh - 160px) / 5.2), calc((100vw - 520px) / 8.6)), 74px);
 
   --bg-primary: #140e0a;
   --bg-secondary: #201710;
@@ -1147,9 +1147,9 @@ body::before {
    ------------------------------------------------------------ */
 @media (min-width: 768px) and (max-width: 1079px) {
   :root {
-    --cell-size: clamp(44px, min(calc((100vh - 130px) / 10), calc((100vw - 260px) / 8.2)), 86px);
-    --piece-size: calc(var(--cell-size) * 0.90);
-    --small-cell-size: clamp(52px, min(calc((100vh - 145px) / 4.7), calc((100vw - 260px) / 8.2)), 94px);
+    --cell-size: clamp(34px, min(calc((100vh - 150px) / 10.4), calc((100vw - 280px) / 9.2)), 64px);
+    --piece-size: calc(var(--cell-size) * 0.88);
+    --small-cell-size: clamp(40px, min(calc((100vh - 170px) / 5.2), calc((100vw - 280px) / 8.6)), 70px);
   }
 
   .app-container {
@@ -1228,10 +1228,10 @@ body::before {
    ------------------------------------------------------------ */
 @media (max-width: 767px) {
   :root {
-    /* 依據可用寬度極大化滿版展開，放寬上限至 94px，徹底杜絕左右黑邊空隙 */
-    --cell-size: clamp(34px, calc((100vw - 18px) / 8.08), 94px);
-    --piece-size: calc(var(--cell-size) * 0.91);
-    --small-cell-size: clamp(38px, calc((100vw - 22px) / 8.12), 96px);
+    /* 雙向嚴格自適應：考慮棋子半徑凸出（除以 9.2）與縱向一屏全覽，字體絕不切邊 */
+    --cell-size: clamp(30px, min(calc((100vw - 32px) / 9.2), calc((100vh - 195px) / 10.4)), 60px);
+    --piece-size: calc(var(--cell-size) * 0.88);
+    --small-cell-size: clamp(34px, min(calc((100vw - 32px) / 8.6), calc((100vh - 195px) / 5.2)), 66px);
   }
 
   /* 手機直屏支援平滑縱向滑動，避免固定高度產生元件擠壓 */
@@ -1252,7 +1252,7 @@ body::before {
     width: 100%;
     height: auto;
     min-height: 100vh;
-    padding: 4px 4px 24px;
+    padding: 4px 6px 20px;
     max-width: 100%;
   }
 
@@ -1408,9 +1408,9 @@ body::before {
     align-items: center;
   }
 
-  /* 棋盤邊框與內距在窄屏上微縮，給棋格最大可用展示面積，杜絕左右黑邊 */
+  /* 棋盤邊框與內距精確預留半個棋子空間，確保最外側車馬砲兵字體 100% 完整無切邊 */
   .board-wrapper {
-    padding: 5px 5px;
+    padding: calc(var(--piece-size) * 0.52 + 2px);
     border-width: 4px;
     border-radius: 8px;
     max-width: 100%;
@@ -1493,18 +1493,18 @@ body::before {
    ------------------------------------------------------------ */
 @media (max-width: 370px) {
   :root {
-    --cell-size: clamp(32px, calc((100vw - 14px) / 8.06), 44px);
-    --piece-size: calc(var(--cell-size) * 0.91);
-    --small-cell-size: clamp(34px, calc((100vw - 16px) / 8.1), 46px);
+    --cell-size: clamp(28px, min(calc((100vw - 24px) / 9.2), calc((100vh - 180px) / 10.4)), 38px);
+    --piece-size: calc(var(--cell-size) * 0.88);
+    --small-cell-size: clamp(32px, min(calc((100vw - 24px) / 8.6), calc((100vh - 180px) / 5.2)), 44px);
   }
 
   .app-container {
-    padding: 4px 4px 20px;
+    padding: 2px 4px 16px;
   }
 
   .board-wrapper {
-    padding: 6px;
-    border-width: 4px;
+    padding: calc(var(--piece-size) * 0.52 + 1px);
+    border-width: 3px;
   }
 
   .brand-text h1 {

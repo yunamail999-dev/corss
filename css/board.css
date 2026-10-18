@@ -3,18 +3,18 @@
  * 包含 9x10 傳統大盤、楚河漢界水墨紋、九宮斜線、炮兵角線及 4x8 暗棋方盤
  */
 
-/* 棋盤共用容器外觀（珍貴實木邊框 + 沉穩金絲線圈，緊湊適配一屏） */
+/* 棋盤共用容器外觀（珍貴實木邊框 + 沉穩金絲線圈，依棋子半徑動態預留邊距） */
 .board-wrapper {
   position: relative;
   background: radial-gradient(circle at 50% 50%, #f6deb3 0%, #e3c18c 60%, #c99c5f 100%);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: calc(var(--piece-size) * 0.52 + 2px);
   box-shadow: 
     0 12px 30px rgba(0, 0, 0, 0.65),
     0 4px 10px rgba(0, 0, 0, 0.4),
     inset 0 0 0 2px #d4af37,
     inset 0 0 15px rgba(90, 50, 15, 0.4);
-  border: 7px solid #5a3418;
+  border: 5px solid #5a3418;
   display: flex;
   justify-content: center;
   align-items: center;
