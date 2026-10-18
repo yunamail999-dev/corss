@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yunamail的棋盤</title>
+  <meta name="description" content="高質感東方美學中國象棋遊戲，支援大盤（9x10）與小盤（暗棋 4x8）雙模式，內建多難度 AI 智慧對戰與擬真 3D 浮雕動效。">
+  <!-- 樣式引用（Viewport-Fit 全螢幕一屏無捲軸沉浸佈局） -->
+  <link rel="stylesheet" href="css/style.css?v=polish-v16">
+  <link rel="stylesheet" href="css/board.css?v=polish-v16">
+  <link rel="stylesheet" href="css/pieces.css?v=polish-v16">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- 頂部頂級導覽列 -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">帥</div>
+        <div class="brand-text">
+          <h1>Yunamail的棋盤</h1>
+        </div>
+      </div>
+
+      <!-- 模式切換器 -->
+      <div class="mode-switch-group">
+        <button id="mode-large-btn" class="mode-btn active" title="正統中國象棋 9x10">
+          <span>🏯</span> 大盤（正統）
+        </button>
+        <button id="mode-small-btn" class="mode-btn" title="象棋暗棋半盤 4x8">
+          <span>🎴</span> 小盤（暗棋）
+        </button>
+      </div>
+
+      <!-- 快捷設定列 -->
+      <div class="header-controls">
+        <!-- 暗棋連吃玩法開關（小盤模式專屬） -->
+        <div id="combo-setting-box" class="combo-setting-box hidden">
+          <label class="combo-toggle-label" title="開啟後吃子四周若有可吃敵棋或暗棋，可連續進擊">
+            <input type="checkbox" id="combo-mode-toggle" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">⚡ 暗棋連吃</span>
+          </label>
+        </div>
+
+        <div class="select-control">
+          <label for="difficulty-select">AI 難度：</label>
+          <select id="difficulty-select" class="custom-select">
+            <option value="easy">初學休閒</option>
+            <option value="medium" selected>進階高手</option>
+            <option value="hard">大師博弈</option>
+          </select>
+        </div>
+
+        <div class="rule-badge">⚡ 玩家先手先行</div>
+
+        <button id="mute-btn" class="icon-btn" title="切換音效">🔊</button>
+      </div>
+    </header>
+
+    <!-- 模式玩法特色提示標籤 -->
+    <div id="mode-description" class="mode-info-tag">
+      【大盤模式】標準楚河漢界 9x10，將帥、士象、車馬炮卒競賽規則（玩家先手執紅）
+    </div>
+
+    <!-- 主對局工作區（一屏沉浸式平衡佈局） -->
+    <main class="game-workspace">
+      <!-- 左側：玩家資訊與操作控制面板 -->
+      <aside class="side-panel">
+        <div class="status-card" id="player-card">
+          <div class="card-header">
+            <div class="player-identity">
+              <div class="avatar-badge">👤</div>
+              <div>
+                <div class="player-name">弈者（玩家）</div>
+                <div id="player-side-tag" class="side-tag red">執紅</div>
+              </div>
+            </div>
+            <div class="timer-box" id="player-timer">00:00</div>
+          </div>
+          <div class="captured-box">
+            <div class="captured-title">已斬獲子力：</div>
+            <div class="captured-list" id="player-captured"></div>
+          </div>
+        </div>
+
+        <!-- 遊戲操作按鍵盒 -->
+        <div class="action-buttons-box">
+          <button id="undo-btn" class="action-btn" title="撤銷上一手">
+            <span>↩️</span> 悔棋一步
+          </button>
+          <button id="restart-btn" class="action-btn primary" title="重啟本局">
+            <span>🔄</span> 重新開局
+          </button>
+        </div>
+
+        <!-- 對弈生涯戰報統計盒 -->
+        <div class="stats-card" id="stats-box">
+          <div class="stats-header">
+            <span class="stats-title">🏆 對弈生涯戰報</span>
+            <button id="reset-stats-btn" class="stats-reset-btn" title="清空累計戰績">重置</button>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-num win" id="stat-wins">0</span>
+              <span class="stat-label">勝局</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num loss" id="stat-losses">0</span>
+              <span class="stat-label">敗局</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num draw" id="stat-draws">0</span>
+              <span class="stat-label">和局</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num combo" id="stat-max-combo">0</span>
+              <span class="stat-label">最高連吃</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 弈棋心法提示卡（平衡版面空間） -->
+        <div class="tips-box" id="tips-box">
+          <div class="tips-title">💡 棋道指引</div>
+          <div id="tips-content">大盤重在佈陣開拓，車佔要津、馬躍奔槽、炮倚山勢；暗棋重在暗度陳倉，穩健翻子、護帥避炮。</div>
+        </div>
+      </aside>
+
+      <!-- 中間：主棋盤展示區（自適應置中） -->
+      <section class="board-center-area">
+        <!-- 暗棋連吃進行中提示橫幅 -->
+        <div id="combo-status-banner" class="combo-status-banner hidden">
+          <span class="combo-flame-icon">🔥</span>
+          <span id="combo-status-text">連吃進擊中！可繼續吃子或收手：</span>
+          <button id="end-combo-btn" class="end-combo-btn">結束連吃 (結束回合)</button>
+        </div>
+
+        <!-- 棋盤容器 -->
+        <div id="board-container"></div>
+
+        <!-- 連吃浮動爆擊數字動效層 -->
+        <div id="combo-popup-container" class="combo-popup-container"></div>
+      </section>
+
+      <!-- 右側：電腦 AI 與棋譜歷史面板 -->
+      <aside class="side-panel">
+        <div class="status-card" id="ai-card">
+          <div class="card-header">
+            <div class="player-identity">
+              <div class="avatar-badge">🤖</div>
+              <div>
+                <div class="player-name">御弈智腦（AI）</div>
+                <div id="ai-side-tag" class="side-tag black">執黑</div>
+              </div>
+            </div>
+            <div class="timer-box" id="ai-timer">00:00</div>
+          </div>
+          <div class="thinking-indicator" id="thinking-indicator">
+            <div class="thinking-dot"></div>
+            <span>智腦運算棋路中...</span>
+          </div>
+          <div class="captured-box">
+            <div class="captured-title">已斬獲子力：</div>
+            <div class="captured-list" id="ai-captured"></div>
+          </div>
+        </div>
+
+        <!-- 棋譜記錄盒（自適應填滿剩餘高度） -->
+        <div class="history-panel">
+          <div class="panel-title">
+            <span>📜 對弈棋譜</span>
+            <span style="font-size: 11px; color: var(--text-dim);">即時步法記錄</span>
+          </div>
+          <div class="history-scroll-box" id="history-list"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- 將軍震撼書法彈出橫幅 -->
+  <div id="check-banner" class="check-alert-banner">將軍！</div>
+
+  <!-- 勝負終局結算彈出視窗 -->
+  <div id="gameover-modal" class="modal-overlay">
+    <div class="gameover-card">
+      <div id="gameover-title" class="gameover-title">🎉 大獲全勝！</div>
+      <div id="gameover-reason" class="gameover-reason">紅方將死黑方！</div>
+      <div>
+        <button id="modal-restart-btn" class="action-btn primary" style="width: 100%; justify-content: center; padding: 12px 24px; font-size: 16px;">
+          <span>⚔️</span> 再弈一局
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入模組化入口腳本 -->
+  <script type="module" src="js/main.js?v=smart-ai-v17"></script>
+</body>
+</html>

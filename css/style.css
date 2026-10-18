@@ -1,0 +1,1512 @@
+/**
+ * 東方御弈 - 全螢幕沉浸佈局與現代東方美學樣式 (css/style.css)
+ * Viewport-Fit 一屏無捲軸、左右平衡側欄、中央棋盤大氣置中
+ */
+
+:root {
+  /* 視窗自適應尺寸：棋盤依螢幕可用寬高動態計算，兼顧電腦大屏與手機折疊屏 */
+  --cell-size: clamp(34px, min(calc((100vh - 145px) / 10.5), calc((100vw - 540px) / 8.6)), 60px);
+  --piece-size: calc(var(--cell-size) * 0.88);
+  --small-cell-size: clamp(44px, min(calc((100vh - 180px) / 5), calc((100vw - 540px) / 8.6)), 74px);
+
+  --bg-primary: #140e0a;
+  --bg-secondary: #201710;
+  --gold-primary: #d4af37;
+  --gold-hover: #ffdf79;
+  --gold-glow: rgba(212, 175, 55, 0.4);
+  --red-accent: #b22222;
+  --black-accent: #2c3437;
+  --card-bg: rgba(30, 20, 14, 0.88);
+  --card-border: rgba(212, 175, 55, 0.24);
+  --text-main: #f5eedb;
+  --text-dim: #b89f82;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, select, input, .chess-piece, .dark-piece-card, .small-cell-slot, .action-btn, .mode-btn {
+  touch-action: manipulation;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* 一屏沈浸，全螢幕無多餘垂直滾動條 */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 50% 30%, #291c13 0%, #120c08 85%),
+    radial-gradient(circle at 85% 85%, rgba(139, 69, 19, 0.12) 0%, transparent 50%);
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* 背景飄逸微光水墨底紋 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(178, 34, 34, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 主應用容器（填滿螢幕並彈性分配） */
+.app-container {
+  width: 100%;
+  max-width: 1380px;
+  height: 100vh;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+/* 頂部緊湊精緻 Header */
+.app-header {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 18px;
+  margin-bottom: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbf0 0%, #d8c29d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Kaiti", "BiauKai", "標楷體", serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #c61e18;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 0 1.5px var(--gold-primary);
+}
+
+.brand-text h1 {
+  font-family: "Kaiti", "BiauKai", "標楷體", serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.brand-text p {
+  display: none; /* 緊湊頂欄隱藏次要副標題 */
+}
+
+/* 模式切換器（大盤 vs 小盤） */
+.mode-switch-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 24px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.mode-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-btn:hover {
+  color: var(--text-main);
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #c49638 0%, #8c5d15 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(196, 150, 56, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+/* 頂部快捷控制區 (難度、先行規則、音效) */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.select-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.custom-select {
+  background: rgba(15, 10, 6, 0.85);
+  color: var(--gold-primary);
+  border: 1px solid var(--card-border);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.custom-select:hover {
+  border-color: var(--gold-primary);
+}
+
+.rule-badge {
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--gold-hover);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  color: var(--gold-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.icon-btn:hover {
+  background: rgba(212, 175, 55, 0.25);
+  transform: scale(1.05);
+}
+
+/* 模式特色規則說明條 */
+.mode-info-tag {
+  font-size: 11px;
+  color: var(--gold-hover);
+  background: rgba(212, 175, 55, 0.12);
+  padding: 3px 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(212, 175, 55, 0.3);
+  text-align: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   主對局工作區 (左 250px | 中 1fr 置中棋盤 | 右 250px)
+   完美填滿視窗剩餘高度，自適應且平衡
+   ============================================================ */
+.game-workspace {
+  flex: 1;
+  min-height: 0; /* 關鍵：允許 flex 子項自動收縮，避免產生捲軸 */
+  width: 100%;
+  display: grid;
+  grid-template-columns: 250px 1fr 250px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* 兩側對稱面板 */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.status-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.status-card.active-turn {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 16px var(--gold-glow);
+}
+
+.status-card.active-turn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--gold-primary) 0%, #8c5d15 100%);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.player-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: #2b1c10;
+  border: 1px solid var(--gold-primary);
+}
+
+.player-name {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.side-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+.side-tag.red {
+  background: rgba(178, 34, 34, 0.25);
+  color: #ff6b6b;
+  border: 1px solid rgba(178, 34, 34, 0.5);
+}
+.side-tag.black {
+  background: rgba(70, 70, 80, 0.4);
+  color: #cfd8dc;
+  border: 1px solid rgba(100, 100, 120, 0.5);
+}
+
+.timer-box {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* AI 思考指示動態燈 */
+.thinking-indicator {
+  display: none;
+  font-size: 11px;
+  color: #52e5a3;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+.thinking-indicator.active {
+  display: flex;
+}
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #52e5a3;
+  animation: blink 0.8s infinite alternate;
+}
+@keyframes blink {
+  0% { opacity: 0.2; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 斬獲子力展示盒 */
+.captured-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.captured-title {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.captured-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 26px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 3px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.mini-captured-piece {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Kaiti", serif;
+  font-weight: bold;
+}
+.mini-captured-piece.red {
+  background: #fbf5e8;
+  color: #c61e18;
+  border: 1px solid #c61e18;
+}
+.mini-captured-piece.black {
+  background: #fbf5e8;
+  color: #181c1e;
+  border: 1px solid #181c1e;
+}
+
+/* 左側下方：快捷操作按鈕組（平衡左側空間） */
+.action-buttons-box {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(180deg, #38281b 0%, #20150d 100%);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.action-btn:hover {
+  background: linear-gradient(180deg, #4d3826 0%, #2e1e13 100%);
+  border-color: var(--gold-primary);
+  color: var(--gold-hover);
+  transform: translateY(-1px);
+}
+
+.action-btn.primary {
+  background: linear-gradient(180deg, #b8860b 0%, #7d5706 100%);
+  border-color: #ffd700;
+  color: #fff;
+}
+.action-btn.primary:hover {
+  background: linear-gradient(180deg, #d49b10 0%, #946708 100%);
+}
+
+/* 左側玩法提示卡（填補左下空白，增進平衡） */
+.tips-box {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+/* 對弈生涯戰報卡片 */
+.stats-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  padding-bottom: 4px;
+}
+
+.stats-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.stats-reset-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stats-reset-btn:hover {
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 4px 2px;
+}
+
+.stat-num {
+  font-size: 14px;
+  font-weight: 900;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.stat-num.win { color: #ff5252; }
+.stat-num.loss { color: #64b5f6; }
+.stat-num.draw { color: #e0e0e0; }
+.stat-num.combo { color: #ffb300; }
+
+.stat-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  transform: scale(0.95);
+}
+
+/* 將帥陷入危險時的肅殺警報光環 */
+.chess-piece.king-in-check {
+  animation: kingDangerPulse 0.75s infinite alternate ease-in-out !important;
+  box-shadow: 0 0 16px #ff0000, 0 0 28px rgba(255, 0, 0, 0.75) !important;
+}
+
+@keyframes kingDangerPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 6px #ff0000);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.14);
+    filter: drop-shadow(0 0 16px #ff2200) brightness(1.2);
+  }
+}
+
+/* 落子與吃子水墨微波紋 (Ink Ripple) */
+.ink-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.7);
+  transform: translate(-50%, -50%);
+  animation: inkExpand 0.45s ease-out forwards;
+  pointer-events: none;
+  z-index: 85;
+}
+
+@keyframes inkExpand {
+  0% {
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    border-color: #ffd700;
+  }
+  100% {
+    width: 65px;
+    height: 65px;
+    opacity: 0;
+    border-color: #ff8c00;
+  }
+}
+
+/* 小盤暗棋最後一手動向標記 (金色呼吸微光) */
+.small-cell-slot.last-action-target {
+  box-shadow: inset 0 0 0 2px #ffd700, 0 0 12px rgba(255, 215, 0, 0.75) !important;
+  animation: lastActionBeacon 1.2s infinite alternate ease-in-out;
+}
+
+.small-cell-slot.last-action-source {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.08) !important;
+}
+
+@keyframes lastActionBeacon {
+  0% {
+    box-shadow: inset 0 0 0 1.5px #ffd700, 0 0 6px rgba(255, 215, 0, 0.4);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2.5px #ffcc00, 0 0 14px rgba(255, 204, 0, 0.85);
+  }
+}
+
+/* 中央棋盤展示區（絕對置中，自適應高度） */
+.board-center-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+}
+
+/* 右側歷史走步記錄面板（填滿右側剩餘高度） */
+.history-panel {
+  flex: 1;
+  min-height: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  margin-bottom: 6px;
+}
+
+.history-scroll-box {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+/* 自訂半透明質感滾動條 */
+.history-scroll-box::-webkit-scrollbar {
+  width: 4px;
+}
+.history-scroll-box::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 2px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border-left: 3px solid transparent;
+}
+.history-item.side-red {
+  border-left-color: #ff6b6b;
+}
+.history-item.side-black {
+  border-left-color: #90caf9;
+}
+
+/* 將軍震撼書法彈出橫幅 */
+.check-alert-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  font-family: "Kaiti", "BiauKai", "標楷體", serif;
+  font-size: 68px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: #ff2a2a;
+  text-shadow: 
+    0 0 20px rgba(255, 0, 0, 0.9),
+    0 0 40px rgba(255, 80, 0, 0.8),
+    0 4px 8px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle, rgba(20, 10, 5, 0.9) 0%, rgba(0, 0, 0, 0) 80%);
+  padding: 30px 60px;
+  border-radius: 20px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.check-alert-banner.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* 終局彈窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.gameover-card {
+  background: radial-gradient(circle at 50% 20%, #3d2b1c 0%, #1e130b 100%);
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--gold-glow);
+  border-radius: 16px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gameover-title {
+  font-family: "Kaiti", "標楷體", serif;
+  font-size: 32px;
+  color: var(--gold-primary);
+}
+
+.gameover-reason {
+  font-size: 15px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+/* ========================================================
+   暗棋連吃專屬樣式 (Combo Eating System)
+   ======================================================== */
+
+.hidden {
+  display: none !important;
+}
+
+/* 頂部暗棋連吃切換開關 */
+.combo-setting-box {
+  display: flex;
+  align-items: center;
+}
+
+.combo-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffd700;
+  cursor: pointer;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.combo-toggle-label:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: #ffd700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.3);
+}
+
+.combo-toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-slider {
+  width: 28px;
+  height: 16px;
+  background: #333;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: #aaa;
+  border-radius: 50%;
+  transition: all 0.25s ease;
+}
+
+.combo-toggle-label input[type="checkbox"]:checked + .toggle-slider {
+  background: linear-gradient(135deg, #d4af37, #ff6b35);
+  border-color: #ffd700;
+}
+
+.combo-toggle-label input[type="checkbox"]:checked + .toggle-slider::after {
+  transform: translateX(12px);
+  background: #ffffff;
+  box-shadow: 0 0 6px #fff;
+}
+
+/* 連吃進擊中頂部提示橫幅 */
+.combo-status-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(35, 15, 8, 0.95), rgba(70, 25, 10, 0.95));
+  border: 1.5px solid #ff7b00;
+  box-shadow: 0 4px 20px rgba(255, 90, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.3);
+  padding: 6px 16px;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 13px;
+  animation: comboPulse 1.5s infinite alternate ease-in-out;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes comboPulse {
+  0% { box-shadow: 0 4px 15px rgba(255, 90, 0, 0.3); }
+  100% { box-shadow: 0 4px 25px rgba(255, 130, 0, 0.6), 0 0 18px rgba(255, 215, 0, 0.5); }
+}
+
+.combo-flame-icon {
+  font-size: 18px;
+  animation: flameShake 0.4s infinite alternate;
+}
+
+@keyframes flameShake {
+  0% { transform: scale(1) rotate(-5deg); }
+  100% { transform: scale(1.15) rotate(5deg); }
+}
+
+#combo-status-text {
+  font-weight: bold;
+  color: #ffe8b3;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.end-combo-btn {
+  background: linear-gradient(180deg, #ff8c00, #cc4400);
+  border: 1px solid #ffd700;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.end-combo-btn:hover {
+  background: linear-gradient(180deg, #ffa500, #e65100);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(255, 140, 0, 0.6);
+}
+
+/* 連吃爆發提示層（畫面中央跳出 Combo 與斬獲棋子） */
+.combo-popup-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 120;
+}
+
+.combo-popup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: comboPop 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  pointer-events: none;
+}
+
+.combo-badge {
+  font-family: "Impact", "Arial Black", "Kaiti", sans-serif;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #fff7ad 0%, #ffa500 50%, #ff2200 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 100, 0, 0.9)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+  white-space: nowrap;
+}
+
+/* 斬獲棋子清晰標籤 */
+.combo-captured-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 10, 6, 0.92);
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 14px rgba(255, 215, 0, 0.5);
+  border-radius: 24px;
+  padding: 4px 14px 4px 10px;
+  backdrop-filter: blur(6px);
+}
+
+.captured-prefix {
+  font-size: 13px;
+  color: #e0d0b5;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.captured-piece-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffdf8, #edd9b5);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 0 0 2px #c29d65;
+  font-family: "Kaiti", "BiauKai", "標楷體", serif;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.captured-piece-token.side-red {
+  color: #c91818;
+  border: 1px solid #c91818;
+  text-shadow: 0 0 3px rgba(255, 0, 0, 0.3);
+}
+
+.captured-piece-token.side-black {
+  color: #1a1a1a;
+  border: 1px solid #333333;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes comboPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(35px);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15) translateY(-8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.0) translateY(0);
+  }
+  85% {
+    opacity: 0.9;
+    transform: scale(1.0) translateY(-10px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-45px);
+  }
+}
+
+/* 棋盤格子現場吃子升空殘影動效 */
+.capture-fly-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 95;
+  animation: captureFlyFade 1.05s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+}
+
+.capture-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #ffcc00;
+  transform: translate(-50%, -50%);
+  animation: shockwaveRipple 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shockwaveRipple {
+  0% {
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    border-color: #ffd700;
+  }
+  100% {
+    width: 90px;
+    height: 90px;
+    opacity: 0;
+    border-color: #ff4500;
+  }
+}
+
+.capture-piece-ghost {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffdf8, #edd9b5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #c29d65, 0 0 20px rgba(255, 215, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Kaiti", "BiauKai", "標楷體", serif;
+  font-weight: 900;
+  font-size: 26px;
+  animation: ghostRise 1.05s ease-out forwards;
+}
+
+.capture-piece-ghost.side-red {
+  color: #c91818;
+  border: 1.5px solid #c91818;
+}
+
+.capture-piece-ghost.side-black {
+  color: #1a1a1a;
+  border: 1.5px solid #333333;
+}
+
+.capture-text-tag {
+  position: absolute;
+  bottom: -6px;
+  background: linear-gradient(135deg, rgba(30, 15, 5, 0.95), rgba(70, 25, 10, 0.95));
+  border: 1px solid #ffd700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.6);
+  color: #fff2cc;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 1px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  animation: tagRise 1.05s ease-out forwards;
+}
+
+@keyframes ghostRise {
+  0% {
+    transform: scale(0.9) translateY(0);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1.3) translateY(-28px);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.15) translateY(-40px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(0.7) translateY(-60px);
+    opacity: 0;
+  }
+}
+
+@keyframes tagRise {
+  0% {
+    transform: scale(0.8) translateY(0);
+    opacity: 0.8;
+  }
+  30% {
+    transform: scale(1.1) translateY(-26px);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.0) translateY(-38px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(0.7) translateY(-56px);
+    opacity: 0;
+  }
+}
+
+@keyframes captureFlyFade {
+  0% { opacity: 1; }
+  85% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* 側邊被吃托盤新棋子彈跳動效 */
+.mini-captured-piece.just-captured {
+  animation: trayPieceBounce 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes trayPieceBounce {
+  0% {
+    transform: scale(0.3);
+    box-shadow: 0 0 16px #ffd700;
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 20px #ff6b35;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ============================================================
+   📱 RWD 響應式佈局體系 (針對 Z Fold 7 折疊雙態與全尺寸手機/平板優化)
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. 折疊展開大屏 & 平板模式 (768px ~ 1079px)
+      ★ 專屬適配 Samsung Galaxy Z Fold 7 展開內屏 (接近方形大屏)
+   ------------------------------------------------------------ */
+@media (min-width: 768px) and (max-width: 1079px) {
+  :root {
+    --cell-size: clamp(38px, min(calc((100vh - 165px) / 10.5), calc((100vw - 310px) / 8.6)), 56px);
+    --piece-size: calc(var(--cell-size) * 0.88);
+    --small-cell-size: clamp(46px, min(calc((100vh - 195px) / 5.2), calc((100vw - 310px) / 8.6)), 68px);
+  }
+
+  .app-container {
+    padding: 8px 14px;
+    max-width: 100%;
+  }
+
+  /* 轉為雙欄大氣佈局：左側大棋盤 (佔 65%)，右側多功能控制欄 (佔 35%) */
+  .game-workspace {
+    display: grid;
+    grid-template-columns: 1fr 270px;
+    grid-template-areas: "board side";
+    gap: 14px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .board-center-area {
+    grid-area: board;
+    height: 100%;
+  }
+
+  /* 穿透第一個 side-panel，使其卡片匯入右側 side 區域 */
+  .game-workspace > aside:first-of-type {
+    display: contents;
+  }
+
+  .game-workspace > aside:last-of-type {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* 右側卡片順序重新排列 */
+  #ai-card {
+    order: 1;
+  }
+
+  #player-card {
+    order: 2;
+  }
+
+  .action-buttons-box {
+    order: 3;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 8px;
+    font-size: 13px;
+  }
+
+  .history-panel {
+    order: 4;
+    flex: 1;
+    min-height: 140px;
+  }
+
+  .tips-box {
+    display: none; /* 折疊大屏收縮提示卡以確保棋譜完整高度 */
+  }
+}
+
+/* ------------------------------------------------------------
+   2. 手機窄屏模式 (寬度 <= 767px)
+      ★ 專屬適配 Samsung Galaxy Z Fold 7 外屏 (折疊狀態狹長屏 375~412px)
+      ★ 同步完美適配各主流直屏智慧手機 (iPhone, Galaxy, Pixel)
+   ------------------------------------------------------------ */
+@media (max-width: 767px) {
+  :root {
+    /* 依據外屏可用寬度精確計算，留出左右側餘白，確保棋子大且絕不橫向溢出 */
+    --cell-size: clamp(30px, calc((100vw - 42px) / 8.2), 46px);
+    --piece-size: calc(var(--cell-size) * 0.88);
+    --small-cell-size: clamp(36px, calc((100vw - 52px) / 8.4), 50px);
+  }
+
+  /* 手機直屏支援平滑縱向滑動，避免固定高度產生元件擠壓 */
+  html, body {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body {
+    display: block;
+  }
+
+  .app-container {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    padding: 6px 8px 30px;
+    max-width: 100%;
+  }
+
+  /* 頂部 Header 在手機上精緻自適應分層 */
+  .app-header {
+    height: auto;
+    min-height: unset;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .brand-section {
+    gap: 8px;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .brand-text h1 {
+    font-size: 17px;
+    letter-spacing: 1px;
+  }
+
+  .mode-switch-group {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .mode-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  /* 控制項橫向自適應填滿第二列 */
+  .header-controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid rgba(212, 175, 55, 0.15);
+    padding-top: 6px;
+  }
+
+  .select-control {
+    font-size: 11px;
+    gap: 3px;
+  }
+
+  .custom-select {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .rule-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .combo-toggle-label {
+    padding: 3px 8px;
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  .toggle-slider {
+    width: 24px;
+    height: 14px;
+  }
+
+  .toggle-slider::after {
+    width: 10px;
+    height: 10px;
+  }
+
+  .mode-info-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    margin-bottom: 6px;
+  }
+
+  /* 主對局工作區：單欄流式，上下對弈排版 */
+  .game-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: auto;
+    min-height: unset;
+  }
+
+  /* 穿透兩側面板容器，讓子項目直接參與垂直排序 */
+  .side-panel {
+    display: contents;
+  }
+
+  /* 順序 1：AI 對手狀態條（居棋盤上方） */
+  #ai-card {
+    order: 1;
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  #ai-card .card-header {
+    margin-bottom: 2px;
+  }
+
+  #ai-card .captured-box {
+    margin-top: 2px;
+  }
+
+  /* 順序 2：中央棋盤區域 */
+  .board-center-area {
+    order: 2;
+    width: 100%;
+    height: auto;
+    margin: 4px 0;
+  }
+
+  /* 棋盤邊框與內距在窄屏上微縮，給棋格最大可用展示面積 */
+  .board-wrapper {
+    padding: 8px 10px;
+    border-width: 5px;
+    border-radius: 8px;
+  }
+
+  .small-board {
+    gap: 4px;
+    padding: 6px;
+    border-width: 2.5px;
+    border-radius: 8px;
+  }
+
+  .small-cell-slot {
+    border-radius: 4px;
+  }
+
+  /* 順序 3：玩家狀態條（居棋盤正下方） */
+  #player-card {
+    order: 3;
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  #player-card .card-header {
+    margin-bottom: 2px;
+  }
+
+  #player-card .captured-box {
+    margin-top: 2px;
+  }
+
+  /* 順序 4：操作按鍵盒（悔棋 / 重新開局）橫向排列 */
+  .action-buttons-box {
+    order: 4;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  /* 順序 5：對弈棋譜記錄盒（固定高度，可滑動查看） */
+  .history-panel {
+    order: 5;
+    height: 150px;
+    min-height: 130px;
+    padding: 10px 12px;
+    margin-top: 4px;
+  }
+
+  /* 手機端隱藏佔位提示卡 */
+  .tips-box {
+    display: none;
+  }
+
+  /* 連吃提示橫幅在手機端置頂居中且寬度自適應 */
+  .combo-status-banner {
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+    margin-bottom: 6px;
+    width: 100%;
+    justify-content: center;
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
+
+/* ------------------------------------------------------------
+   3. 超窄屏極限安全防護 (寬度 <= 370px)
+   ------------------------------------------------------------ */
+@media (max-width: 370px) {
+  :root {
+    --cell-size: 32px;
+    --small-cell-size: 36px;
+  }
+
+  .app-container {
+    padding: 4px 4px 20px;
+  }
+
+  .board-wrapper {
+    padding: 6px;
+    border-width: 4px;
+  }
+
+  .brand-text h1 {
+    font-size: 15px;
+  }
+}
+
+/* ------------------------------------------------------------
+   4. 手機橫屏極限模式 (高度 <= 520px)
+   ------------------------------------------------------------ */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root {
+    --cell-size: calc((100vh - 85px) / 10.5);
+    --small-cell-size: calc((100vh - 95px) / 4.8);
+  }
+
+  .app-header {
+    height: 38px;
+    min-height: 38px;
+    padding: 0 10px;
+  }
+
+  .mode-info-tag {
+    display: none;
+  }
+
+  .game-workspace {
+    grid-template-columns: 200px 1fr 200px;
+    gap: 8px;
+  }
+
+  .status-card {
+    padding: 6px 10px;
+  }
+
+  .action-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
+

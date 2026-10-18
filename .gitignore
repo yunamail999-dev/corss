@@ -1,0 +1,13 @@
+# 系統與臨時檔案
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 臨時測試目錄
+scratch/
+*.tmp
+*.log
+
+# 編輯器配置
+.vscode/
+.idea/

@@ -1,0 +1,266 @@
+/**
+ * 東方御弈 - 平整實木雕刻 / 平整無凸起翠綠背面 (css/pieces.css)
+ * 完美還原使用者實拍照片：平整原木盤面、深刻車工槽雙環、深雕漆字、完全平坦無圓弧凸起球感
+ */
+
+/* ============================================================
+   大盤與基礎棋子造型（完全平坦實木圓盤，無圓弧凸起）
+   ============================================================ */
+
+.chess-piece {
+  position: absolute;
+  width: var(--piece-size);
+  height: var(--piece-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  cursor: pointer;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* 棋子實體：完全平坦的天然原木質感（如照片中的楓木/白櫸木，無球面弧度） */
+.piece-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Kaiti", "BiauKai", "DFKai-SB", "STKaiti", "楷體", "標楷體", serif;
+  font-size: calc(var(--piece-size) * 0.54);
+  font-weight: 900;
+  position: relative;
+  box-sizing: border-box;
+  
+  /* 照片中的平整原木米白底色，平坦漫反射，無圓弧高光 */
+  background: #fbf5e8;
+  border: 1.5px solid #d5bd96;
+  box-shadow:
+    /* 外邊緣微倒角切面 */
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px rgba(120, 85, 45, 0.35),
+    /* 照片中最醒目的那一圈深雕車工溝槽（Grooved Inner Ring） */
+    inset 0 0 0 2px #fbf5e8,
+    inset 0 0 0 4px #b8976a,
+    inset 0 0 0 5.5px #fbf5e8,
+    /* 平整木塊在盤面上的立體陰影 */
+    0 3px 6px rgba(0, 0, 0, 0.32),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 紅方棋子：平整木面 + 深深刻入木頭的硃砂紅油漆字（如照片中的「相」、「車」、「兵」） */
+.chess-piece.side-red .piece-inner {
+  background: #fcf6ea;
+  color: #c61e18;
+  text-shadow: 
+    0 1px 1px rgba(255, 255, 255, 0.9),
+    0 -1px 2px rgba(90, 0, 0, 0.85),
+    1px 0 1px rgba(90, 0, 0, 0.55),
+    -1px 0 1px rgba(90, 0, 0, 0.55);
+}
+
+/* 黑方棋子：平整木面 + 深深刻入木頭的沉穩玄黑濃墨字 */
+.chess-piece.side-black .piece-inner {
+  background: #fcf6ea;
+  color: #181c1e;
+  text-shadow: 
+    0 1px 1px rgba(255, 255, 255, 0.85),
+    0 -1px 2px rgba(0, 0, 0, 0.95);
+}
+
+/* 棋子被選取時的平移懸浮與柔和金芒 */
+.chess-piece.selected {
+  transform: translate(-50%, -58%) scale(1.1);
+  z-index: 30;
+}
+.chess-piece.selected .piece-inner {
+  box-shadow: 
+    0 0 18px rgba(255, 215, 0, 0.9),
+    inset 0 1px 2px rgba(255, 255, 255, 1),
+    inset 0 0 0 2px #fbf5e8,
+    inset 0 0 0 4px #d4af37,
+    0 10px 20px rgba(0, 0, 0, 0.5);
+  border-color: #ffd700;
+  animation: pieceFloat 1.6s infinite ease-in-out alternate;
+}
+
+@keyframes pieceFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+/* 最後一步落子位置光環標記 */
+.last-move-marker {
+  position: absolute;
+  width: calc(var(--piece-size) * 1.15);
+  height: calc(var(--piece-size) * 1.15);
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 215, 0, 0.85);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: rotateMarker 16s linear infinite;
+  z-index: 5;
+}
+
+@keyframes rotateMarker {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 合法移動目標點指示（碧玉小光珠） */
+.move-dest-indicator {
+  position: absolute;
+  width: calc(var(--piece-size) * 0.36);
+  height: calc(var(--piece-size) * 0.36);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #76ffc4 0%, #2ec87c 60%, #107542 100%);
+  box-shadow: 0 0 10px rgba(78, 240, 160, 0.85), 0 2px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 25;
+  transition: transform 0.15s ease;
+}
+.move-dest-indicator:hover {
+  transform: translate(-50%, -50%) scale(1.35);
+}
+
+/* 吃子目標指示環（赤紅準星圈） */
+.capture-dest-indicator {
+  position: absolute;
+  width: calc(var(--piece-size) * 1.12);
+  height: calc(var(--piece-size) * 1.12);
+  border-radius: 50%;
+  border: 3px solid #ff2a2a;
+  box-shadow: 0 0 16px rgba(255, 42, 42, 0.85);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 26;
+  animation: capturePulse 1.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes capturePulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1.0); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) scale(1.14); opacity: 0.55; }
+}
+
+/* 暗棋連吃翻吃目標指示（琥珀金火雷電瞄準圈） */
+.dark-capture-dest-indicator {
+  position: absolute;
+  width: calc(var(--piece-size) * 1.15);
+  height: calc(var(--piece-size) * 1.15);
+  border-radius: 50%;
+  border: 2.5px dashed #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.9), inset 0 0 10px rgba(255, 140, 0, 0.5);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  animation: darkCaptureSpin 3s linear infinite, darkCapturePulse 1.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes darkCaptureSpin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes darkCapturePulse {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 0.6; }
+}
+
+/* ============================================================
+   小盤暗棋專用：3D 翻轉卡牌結構
+   正面：完全平坦實木雕字 / 背面：完全平坦經典翠玉綠（無任何圓弧凸起）
+   ============================================================ */
+
+.dark-piece-card {
+  width: 90%;
+  height: 90%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* 翻開狀態 */
+.dark-piece-card.is-revealed {
+  transform: rotateY(0deg);
+}
+
+/* 蓋住未翻狀態 */
+.dark-piece-card.is-hidden {
+  transform: rotateY(180deg);
+}
+
+/* 翻牌正反面 */
+.dark-card-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 正面（翻開後的明棋：平坦實木雙車工雕刻面） */
+.dark-card-front {
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform: rotateY(0deg) !important;
+  z-index: 2;
+}
+
+.dark-card-front .piece-inner {
+  font-size: calc(var(--small-cell-size) * 0.44);
+}
+
+/* 背面（暗棋蓋著時）：完全平整的經典翠玉青綠色（平盤木餅，無圓弧凸起球感） */
+.dark-card-back {
+  transform: rotateY(180deg);
+  /* 徹底平坦純淨的青翠玉綠底色，絕無球體圓形高光漸變 */
+  background: #6a9c67;
+  border: 1.5px solid #507e4d;
+  box-shadow: 
+    /* 平面邊緣細微倒角 */
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    inset 0 -1.5px 2px rgba(25, 55, 22, 0.45),
+    /* 平整圓盤著盤陰影 */
+    0 3px 6px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+}
+
+/* 徹底無字無凸點！平整乾淨 */
+.dark-card-back::after {
+  display: none !important;
+  content: none !important;
+}
+
+.dark-card-back:hover {
+  filter: brightness(1.08);
+  box-shadow: 
+    0 0 12px rgba(110, 200, 105, 0.7),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7),
+    0 5px 10px rgba(0, 0, 0, 0.4);
+}
