@@ -11,3 +11,5 @@ scratch/
 # 編輯器配置
 .vscode/
 .idea/
+# 本機腳本
+push.bat
