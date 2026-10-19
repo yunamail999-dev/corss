@@ -4,10 +4,10 @@
  */
 
 :root {
-  /* 視窗自適應尺寸：兼顧全覽與清晰大氣，解除過度拘束的上限 */
-  --cell-size: clamp(34px, min(calc((100vh - 130px) / 10.2), calc((100vw - 500px) / 9.0)), 82px);
+  /* 視窗自適應尺寸：精密扣除頂欄與外框，下限放寬至 22px，徹底杜絕矮螢幕棋盤上溢遮擋 Header */
+  --cell-size: clamp(22px, min(calc((100vh - 160px) / 10.4), calc((100vw - 520px) / 9.2)), 82px);
   --piece-size: calc(var(--cell-size) * 0.89);
-  --small-cell-size: clamp(42px, min(calc((100vh - 150px) / 5.0), calc((100vw - 500px) / 8.4)), 88px);
+  --small-cell-size: clamp(28px, min(calc((100vh - 160px) / 5.2), calc((100vw - 520px) / 8.5)), 88px);
 
   --bg-primary: #140e0a;
   --bg-secondary: #201710;
@@ -76,7 +76,7 @@ body::before {
   z-index: 1;
 }
 
-/* 頂部緊湊精緻 Header */
+/* 頂部緊湊精緻 Header（強制最高層級，絕對不可被底層棋盤遮擋） */
 .app-header {
   width: 100%;
   height: 52px;
@@ -91,6 +91,8 @@ body::before {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1000 !important;
 }
 
 .brand-section {
@@ -126,39 +128,47 @@ body::before {
   display: none; /* 緊湊頂欄隱藏次要副標題 */
 }
 
-/* 模式切換器（大盤 vs 小盤） */
+/* 模式切換器（大盤 vs 小盤）- 顯著黑金雙色高亮膠囊 */
 .mode-switch-group {
   display: flex;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(10, 6, 4, 0.88);
+  border: 1.5px solid var(--gold-primary);
   border-radius: 24px;
   padding: 3px;
   gap: 4px;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.35), inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  z-index: 1002;
+  flex-shrink: 0;
 }
 
 .mode-btn {
-  padding: 6px 16px;
+  padding: 6px 18px;
   border-radius: 20px;
   border: none;
   background: transparent;
-  color: var(--text-dim);
+  color: #d8c29d;
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .mode-btn:hover {
-  color: var(--text-main);
+  color: #ffffff;
+  background: rgba(212, 175, 55, 0.2);
 }
 
 .mode-btn.active {
-  background: linear-gradient(135deg, #c49638 0%, #8c5d15 100%);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(196, 150, 56, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, #f5d77f 0%, #d4af37 50%, #996d18 100%);
+  color: #261305;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  transform: translateY(-0.5px);
 }
 
 /* 頂部快捷控制區 (難度、先行規則、音效) */
@@ -1143,9 +1153,9 @@ body::before {
    ------------------------------------------------------------ */
 @media (min-width: 821px) and (orientation: landscape), (min-width: 1081px) and (max-width: 1200px) {
   :root {
-    --cell-size: clamp(36px, min(calc((100dvh - 130px) / 10.2), calc((100vw - 280px) / 9.2), calc((100vh - 130px) / 10.2)), 82px);
+    --cell-size: clamp(20px, min(calc((100dvh - 160px) / 10.4), calc((100vw - 320px) / 9.2), calc((100vh - 160px) / 10.4)), 82px);
     --piece-size: calc(var(--cell-size) * 0.89);
-    --small-cell-size: clamp(42px, min(calc((100dvh - 150px) / 5.0), calc((100vw - 280px) / 8.5), calc((100vh - 150px) / 5.0)), 88px);
+    --small-cell-size: clamp(26px, min(calc((100dvh - 160px) / 5.2), calc((100vw - 320px) / 8.5), calc((100vh - 160px) / 5.2)), 88px);
   }
 
   .app-container {
@@ -1513,27 +1523,44 @@ body::before {
 }
 
 /* ------------------------------------------------------------
-   4. 手機橫屏極限模式 (高度 <= 520px)
+   4. 矮橫屏模式 (高度 <= 560px)
    ------------------------------------------------------------ */
-@media (max-height: 520px) and (orientation: landscape) {
+@media (max-height: 560px) and (orientation: landscape) {
   :root {
-    --cell-size: calc((100vh - 85px) / 10.5);
-    --small-cell-size: calc((100vh - 95px) / 4.8);
+    --cell-size: clamp(18px, calc((100vh - 120px) / 10.5), 48px) !important;
+    --piece-size: calc(var(--cell-size) * 0.89) !important;
+    --small-cell-size: clamp(24px, calc((100vh - 120px) / 5.2), 60px) !important;
+  }
+
+  .app-container {
+    padding: 4px 10px !important;
   }
 
   .app-header {
-    height: 38px;
-    min-height: 38px;
-    padding: 0 10px;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 12px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .mode-switch-group {
+    padding: 2px 4px !important;
+    gap: 3px !important;
+  }
+
+  .mode-btn {
+    padding: 4px 12px !important;
+    font-size: 11px !important;
   }
 
   .mode-info-tag {
-    display: none;
+    display: none !important;
   }
 
   .game-workspace {
     grid-template-columns: 200px 1fr 200px;
     gap: 8px;
+    align-items: center !important;
   }
 
   .status-card {
