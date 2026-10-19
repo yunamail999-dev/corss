@@ -136,7 +136,7 @@ class XiangqiGameApp {
   loadUserPreferences() {
     try {
       const savedDiff = localStorage.getItem('yunamail_difficulty');
-      if (savedDiff && ['easy', 'medium', 'hard'].includes(savedDiff)) {
+      if (savedDiff && ['easy', 'amateur', 'medium', 'hard', 'grandmaster'].includes(savedDiff)) {
         this.difficulty = savedDiff;
         if (this.dom.difficultySelect) this.dom.difficultySelect.value = savedDiff;
         this.largeAI.setDifficulty(savedDiff);

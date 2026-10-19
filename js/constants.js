@@ -37,11 +37,22 @@ export const GAME_MODE = {
   SMALL: 'small'    // 小盤暗棋（4x8）
 };
 
-// AI 難度等級
+// AI 難度等級（5 個層次分明的智慧維度）
 export const AI_DIFFICULTY = {
-  EASY: 'easy',       // 初學休閒
-  MEDIUM: 'medium',   // 進階高手
-  HARD: 'hard'        // 大師博弈
+  EASY: 'easy',               // 🟢 初學休閒（有防自殺機制，新手練手）
+  AMATEUR: 'amateur',         // 🔵 業餘進階（深度 2 步，穩健防守）
+  MEDIUM: 'medium',           // 🟡 棋館高手（深度 3 步，攻守兼備）
+  HARD: 'hard',               // 🔴 象棋大師（深度 4 步，開局算計）
+  GRANDMASTER: 'grandmaster'  // 🟣 神算特大（深度 4~5 步，精準絕殺）
+};
+
+// AI 難度繁體中文顯示文字與說明
+export const AI_DIFFICULTY_LABELS = {
+  [AI_DIFFICULTY.EASY]:        { name: '初學休閒', badge: '🟢', desc: '走步自然輕鬆，內建防自殺大子保護' },
+  [AI_DIFFICULTY.AMATEUR]:     { name: '業餘進階', badge: '🔵', desc: '注重防守與子力得失，算度 2 步' },
+  [AI_DIFFICULTY.MEDIUM]:      { name: '棋館高手', badge: '🟡', desc: '算度 3 步，善於捉子與戰術交換' },
+  [AI_DIFFICULTY.HARD]:        { name: '象棋大師', badge: '🔴', desc: '算度 4 步 + 開局庫，步步為營' },
+  [AI_DIFFICULTY.GRANDMASTER]: { name: '神算特大', badge: '🟣', desc: '深算 4~5 步 + 無根子排查，精準絕殺' }
 };
 
 // 大盤位置價值表（Piece-Square Tables，以紅方視角為基礎，黑方則垂直對稱翻轉）

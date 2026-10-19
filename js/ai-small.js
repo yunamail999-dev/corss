@@ -1,6 +1,6 @@
 /**
  * 東方御弈 - 小盤暗棋（半盤 4x8）AI 決策引擎 (js/ai-small.js)
- * 整合「翻棋機率評估」、「吃子利益衡量」、「砲架威脅警戒」與「避險逃生」
+ * 5 級強化版：翻棋機率評估、嚴格防送死保護、砲架威脅警戒、連吃期望值優化
  */
 
 import { SIDE, AI_DIFFICULTY } from './constants.js';
@@ -21,7 +21,7 @@ export class SmallAI {
     if (id === 'R_BISHOP' || id === 'B_BISHOP') return 300;   // 相/象
     if (id === 'R_ROOK' || id === 'B_ROOK') return 250;       // 俥/車
     if (id === 'R_KNIGHT' || id === 'B_KNIGHT') return 180;   // 傌/馬
-    if (id === 'R_CANNON' || id === 'B_CANNON') return 350;   // 炮/包（暗棋中翻山殺傷力極大）
+    if (id === 'R_CANNON' || id === 'B_CANNON') return 350;   // 炮/包（翻山殺傷力極大）
     if (id === 'R_PAWN' || id === 'B_PAWN') return 120;       // 兵/卒（能殺帥將）
     return 50;
   }
@@ -50,33 +50,12 @@ export class SmallAI {
     const legalMoves = board.getAllLegalMoves(aiSide);
     const enemySide = aiSide === SIDE.RED ? SIDE.BLACK : SIDE.RED;
 
-    // 若場上完全無明棋且尚未決定陣營（開局首翻）
+    // 開局首翻或無明棋時
     if (!aiSide || (legalMoves.length === 0 && unrevealedTiles.length > 0)) {
-      // 隨機翻中間較安全的一顆暗棋
       const picked = unrevealedTiles[Math.floor(Math.random() * unrevealedTiles.length)];
       return { action: 'flip', r: picked.r, c: picked.c };
     }
 
-    // 1. 初學難度 (Easy)
-    if (this.difficulty === AI_DIFFICULTY.EASY) {
-      // 若有吃子機會，70% 機率直接吃
-      const captures = legalMoves.filter(m => m.captured !== null);
-      if (captures.length > 0 && Math.random() < 0.7) {
-        const cap = captures[Math.floor(Math.random() * captures.length)];
-        return { action: 'move', move: cap };
-      }
-      // 否則在翻棋與普通移動中隨機擇一
-      if (unrevealedTiles.length > 0 && (Math.random() < 0.5 || legalMoves.length === 0)) {
-        const picked = unrevealedTiles[Math.floor(Math.random() * unrevealedTiles.length)];
-        return { action: 'flip', r: picked.r, c: picked.c };
-      }
-      if (legalMoves.length > 0) {
-        const pickedMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-        return { action: 'move', move: pickedMove };
-      }
-    }
-
-    // 2. 進階 (Medium) & 大師 (Hard) 啟發式評估
     let candidateActions = [];
 
     // (A) 分析所有合法走步（移動與吃子）
@@ -92,11 +71,11 @@ export class SmallAI {
       if (captured) {
         const victimVal = this.getRankValue(captured.rank, captured.id);
         const myVal = this.getRankValue(piece.rank, piece.id);
-        score += victimVal * 2; // 吃子得分
+        score += victimVal * 2.2; // 吃子基本收益
 
         // 若是炮隔子跳吃，給予額外戰術獎勵
         if (move.isCannonShot) {
-          score += 100;
+          score += 120;
         }
 
         // 吃子後是否會被對手反吃？
@@ -105,10 +84,13 @@ export class SmallAI {
         board.undoLastAction();
 
         if (destThreat.underAttack) {
-          // 交換評估：若吃得大子值得，否則扣分
           const tradeBalance = victimVal - myVal;
           if (tradeBalance < 0) {
-            score -= (myVal - victimVal) * 1.5;
+            // 用大子去吃有保護的小子（不良交換，重重扣分）
+            score -= (myVal - victimVal) * 2.0;
+          } else {
+            // 平價或高收益交換
+            score += 15;
           }
         }
       } else {
@@ -118,14 +100,14 @@ export class SmallAI {
         board.undoLastAction();
 
         if (currentThreat.underAttack && !destThreat.underAttack) {
-          // 成功脫險！依照棋子價值給予極高避險獎勵
-          score += this.getRankValue(piece.rank, piece.id) * 1.5;
+          // 成功脫險！依棋子價值給予極高避險獎勵
+          score += this.getRankValue(piece.rank, piece.id) * 1.8;
         } else if (destThreat.underAttack) {
-          // 自投羅網送子，大幅扣分
-          score -= this.getRankValue(piece.rank, piece.id) * 2;
+          // 自投羅網白白送死（大子絕對禁止）！
+          score -= this.getRankValue(piece.rank, piece.id) * 2.5;
         } else {
-          // 安全移動，少量隨機位置分
-          score += 5 + Math.random() * 5;
+          // 安全位移
+          score += 8;
         }
       }
 
@@ -142,7 +124,6 @@ export class SmallAI {
       const { r, c } = tile;
 
       // 檢查該暗棋是否正處於敵方炮的跳殺射程上
-      // 若正好在敵方炮的射程上，翻開可能翻到小兵立刻被吃
       let inCannonFire = false;
       const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
       for (const [dr, dc] of dirs) {
@@ -167,7 +148,7 @@ export class SmallAI {
       }
 
       if (inCannonFire) {
-        flipScore -= 200; // 處在敵炮射程，極危險
+        flipScore -= 240; // 處在敵炮射程，極危險
       }
 
       // 周圍相鄰格子評估
@@ -179,21 +160,18 @@ export class SmallAI {
         if (nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) {
           const p = board.grid[nr][nc];
           if (p && p.isRevealed) {
-            if (p.side === enemySide) {
-              adjacentEnemies++;
-            } else {
-              adjacentFriends++;
-            }
+            if (p.side === enemySide) adjacentEnemies++;
+            else adjacentFriends++;
           }
         }
       }
 
-      // 若周遭有敵方大棋（尤其是帥仕相車），翻棋容易被貼臉吃
-      flipScore -= adjacentEnemies * 40;
-      flipScore += adjacentFriends * 20;
+      // 若周遭有敵方大棋，翻棋容易被貼臉吃
+      flipScore -= adjacentEnemies * 45;
+      flipScore += adjacentFriends * 25;
 
-      // 翻棋基礎分：當前場上若已無好走法，翻棋為關鍵戰術
-      flipScore += 15 + Math.random() * 10;
+      // 翻棋基礎分
+      flipScore += 18;
 
       candidateActions.push({
         action: 'flip',
@@ -202,17 +180,33 @@ export class SmallAI {
       });
     }
 
-    // 依評估分排序
-    candidateActions.sort((a, b) => b.score - a.score);
-
     if (candidateActions.length === 0) return null;
 
-    // 大師難度直接取最優解；進階難度微量隨機挑選前 2 名
-    if (this.difficulty === AI_DIFFICULTY.HARD) {
-      return candidateActions[0];
-    } else {
-      const topPicks = candidateActions.slice(0, Math.min(2, candidateActions.length));
-      return topPicks[Math.floor(Math.random() * topPicks.length)];
+    // 依分數高低排序
+    candidateActions.sort((a, b) => b.score - a.score);
+
+    // 嚴格過濾負極端分（嚴禁送死）
+    const safeActions = candidateActions.filter(item => item.score > -200);
+    const pool = safeActions.length > 0 ? safeActions : candidateActions;
+
+    // 依據難度選擇動作
+    switch (this.difficulty) {
+      case AI_DIFFICULTY.EASY: {
+        // 初學：前 2~3 個安全步隨機挑選
+        const top = pool.slice(0, Math.min(3, pool.length));
+        return top[Math.floor(Math.random() * top.length)];
+      }
+      case AI_DIFFICULTY.AMATEUR: {
+        // 業餘：前 2 名挑選
+        const top = pool.slice(0, Math.min(2, pool.length));
+        return top[Math.floor(Math.random() * top.length)];
+      }
+      case AI_DIFFICULTY.MEDIUM:
+      case AI_DIFFICULTY.HARD:
+      case AI_DIFFICULTY.GRANDMASTER:
+      default:
+        // 高手、大師、特大：嚴格執行最高評分最優行動
+        return pool[0];
     }
   }
 
@@ -229,10 +223,10 @@ export class SmallAI {
     for (const move of captures) {
       if (move.type === 'capture') {
         const victim = move.captured;
-        let score = this.getRankValue(victim.rank, victim.id) * 2;
+        let score = this.getRankValue(victim.rank, victim.id) * 2.2;
 
         // 檢查吃了之後在目標格是否會被反吃
-        board.makeMove(move, false); // 暫不切換回合
+        board.makeMove(move, false);
         const destThreat = this.isTileUnderAttack(board, move.toR, move.toC, piece, enemySide);
         board.undoLastAction();
 
@@ -240,7 +234,7 @@ export class SmallAI {
           const victimVal = this.getRankValue(victim.rank, victim.id);
           const myVal = this.getRankValue(piece.rank, piece.id);
           if (myVal > victimVal) {
-            score -= (myVal - victimVal) * 1.5;
+            score -= (myVal - victimVal) * 1.8;
           }
         }
         evaluated.push({ move, score });
@@ -248,23 +242,19 @@ export class SmallAI {
         // 暗棋翻吃評估：根據自身位階計算期望勝率
         let darkScore = 0;
         if (piece.id === 'R_KING' || piece.id === 'B_KING') {
-          darkScore = 260; // 帥將極強，翻吃勝率極高
+          darkScore = 280; // 帥將極強
         } else if (piece.id === 'R_ADVISOR' || piece.id === 'B_ADVISOR') {
-          darkScore = 200; // 士仕
+          darkScore = 220; // 士仕
         } else if (piece.id === 'R_BISHOP' || piece.id === 'B_BISHOP') {
-          darkScore = 150; // 象相
+          darkScore = 170; // 象相
         } else if (piece.id === 'R_ROOK' || piece.id === 'B_ROOK') {
-          darkScore = 140; // 車
+          darkScore = 150; // 車
         } else if (piece.id === 'R_CANNON' || piece.id === 'B_CANNON') {
-          darkScore = 180; // 炮只要翻出敵棋即吃
+          darkScore = 200; // 炮
         } else if (piece.id === 'R_KNIGHT' || piece.id === 'B_KNIGHT') {
-          darkScore = 50;  // 馬普通
+          darkScore = 60;  // 馬
         } else {
-          darkScore = -50; // 兵卒翻暗棋風險大，通常不主動翻吃
-        }
-
-        if (this.difficulty === AI_DIFFICULTY.EASY) {
-          darkScore = Math.random() < 0.4 ? 120 : -80;
+          darkScore = -60; // 兵卒翻暗棋風險大
         }
 
         if (darkScore > 0) {
@@ -276,10 +266,9 @@ export class SmallAI {
     if (evaluated.length === 0) return null;
 
     evaluated.sort((a, b) => b.score - a.score);
-    // 初學難度偶爾隨機挑選，進階與大師挑最高分
-    if (this.difficulty === AI_DIFFICULTY.EASY && Math.random() < 0.3) {
-      return evaluated[Math.floor(Math.random() * evaluated.length)].move;
-    }
-    return evaluated[0].move;
+    const safeEvaluated = evaluated.filter(e => e.score > 0);
+    if (safeEvaluated.length === 0) return null; // 若連吃會送死，果斷結束連吃
+
+    return safeEvaluated[0].move;
   }
 }
