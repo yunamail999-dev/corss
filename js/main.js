@@ -698,15 +698,14 @@ class XiangqiGameApp {
     this.hideComboBanner();
   }
 
-  // 顯示連吃進擊狀態橫幅（標明當前連吃計數與方才斬獲的棋子）
+  // 顯示連吃進擊狀態橫幅（精緻懸浮膠囊，文字簡短典雅）
   showComboBanner(count, who = 'player', lastCaptured = null) {
     if (!this.dom.comboStatusBanner) return;
-    const capText = lastCaptured ? `，剛斬獲【${lastCaptured.name}】` : '';
     if (who === 'player') {
-      this.dom.comboStatusText.textContent = `🔥 連吃進擊中（已連吃 ${count} 子${capText}）！可繼續吃子，或收手：`;
+      this.dom.comboStatusText.textContent = `⚡ 連吃進擊中 (已連吃 ${count})：`;
       if (this.dom.endComboBtn) this.dom.endComboBtn.style.display = 'inline-block';
     } else {
-      this.dom.comboStatusText.textContent = `🤖 智腦連吃進擊中（已連吃 ${count} 子${capText}）...`;
+      this.dom.comboStatusText.textContent = `⚡ 智腦連吃進擊中...`;
       if (this.dom.endComboBtn) this.dom.endComboBtn.style.display = 'none';
     }
     this.dom.comboStatusBanner.classList.remove('hidden');
@@ -719,34 +718,18 @@ class XiangqiGameApp {
     }
   }
 
-  // 棋盤現場吃子位置的昇空殘影與衝擊光環特效
+  // 棋盤吃子特效：保持純粹雅致，不再出現突兀的幽靈大字與飄字
   triggerPieceCaptureEffect(r, c, capturedPiece) {
-    if (!capturedPiece) return;
-    const gridEl = document.getElementById('small-board-grid');
-    if (!gridEl) return;
-    const slotIndex = r * 8 + c;
-    const slot = gridEl.children[slotIndex];
-    if (!slot) return;
-
-    const effectEl = document.createElement('div');
-    effectEl.className = 'capture-fly-effect';
-    effectEl.innerHTML = `
-      <div class="capture-ripple"></div>
-      <div class="capture-piece-ghost side-${capturedPiece.side}">
-        <div class="piece-inner">${capturedPiece.name}</div>
-      </div>
-      <div class="capture-text-tag side-${capturedPiece.side}">斬獲【${capturedPiece.name}】</div>
-    `;
-    slot.appendChild(effectEl);
-
-    setTimeout(() => {
-      effectEl.remove();
-    }, 1100);
+    // 徹底移除突兀的幽靈浮誇字樣，保留極簡純粹的實木對弈體驗
+    return;
   }
 
-  // 觸發連吃爆發特效、音效與斬獲棋子資訊展示
+  // 觸發連吃爆發特效（嚴格過濾 count <= 1，絕不彈出突兀的「連吃 1」！）
   triggerComboPopup(count, capturedPiece = null) {
+    // 單次吃子屬於正常落子，絕對不彈出任何「連吃 1」！
+    if (count <= 1) return;
     if (!this.dom.comboPopupContainer) return;
+
     sound.playCombo(count);
 
     // 戰績最高連吃紀錄即時更新
@@ -758,28 +741,17 @@ class XiangqiGameApp {
 
     const box = document.createElement('div');
     box.className = 'combo-popup-box';
-
-    const badgeText = count >= 3 ? `💥 連吃 ${count} 殺！` : `🔥 連吃 x${count}！`;
-    let capturedHtml = '';
-    if (capturedPiece) {
-      capturedHtml = `
-        <div class="combo-captured-badge">
-          <span class="captured-prefix">斬獲</span>
-          <span class="captured-piece-token side-${capturedPiece.side}">${capturedPiece.name}</span>
-        </div>
-      `;
-    }
+    const badgeText = `⚡ 連吃 x${count}！`;
 
     box.innerHTML = `
       <div class="combo-badge">${badgeText}</div>
-      ${capturedHtml}
     `;
 
     this.dom.comboPopupContainer.appendChild(box);
 
     setTimeout(() => {
       box.remove();
-    }, 1100);
+    }, 900);
   }
 
   // 結束連吃回合（玩家主動收手或無子可吃時使用）

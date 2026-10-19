@@ -829,59 +829,55 @@ body::before {
   box-shadow: 0 0 6px #fff;
 }
 
-/* 連吃進擊中頂部提示橫幅 */
+/* 連吃進擊中頂部提示橫幅（極簡黑玉金絲懸浮膠囊，純絕對定位絕不推擠棋盤） */
 .combo-status-banner {
   position: absolute;
-  top: 8px;
+  top: -36px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: 100;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, rgba(35, 15, 8, 0.95), rgba(70, 25, 10, 0.95));
-  border: 1.5px solid #ff7b00;
-  box-shadow: 0 4px 20px rgba(255, 90, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.3);
-  padding: 6px 16px;
-  border-radius: 24px;
-  color: #fff;
-  font-size: 13px;
-  animation: comboPulse 1.5s infinite alternate ease-in-out;
+  gap: 8px;
+  background: rgba(28, 18, 12, 0.95);
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7), 0 0 10px rgba(212, 175, 55, 0.35);
+  padding: 4px 14px;
+  border-radius: 20px;
+  color: #f5eedb;
+  font-size: 12px;
   backdrop-filter: blur(8px);
-}
-
-@keyframes comboPulse {
-  0% { box-shadow: 0 4px 15px rgba(255, 90, 0, 0.3); }
-  100% { box-shadow: 0 4px 25px rgba(255, 130, 0, 0.6), 0 0 18px rgba(255, 215, 0, 0.5); }
+  pointer-events: auto;
+  white-space: nowrap;
 }
 
 .combo-flame-icon {
-  font-size: 18px;
-  animation: flameShake 0.4s infinite alternate;
-}
-
-@keyframes flameShake {
-  0% { transform: scale(1) rotate(-5deg); }
-  100% { transform: scale(1.15) rotate(5deg); }
+  font-size: 14px;
 }
 
 #combo-status-text {
-  font-weight: bold;
-  color: #ffe8b3;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  color: #ffdf79;
+  letter-spacing: 0.5px;
 }
 
 .end-combo-btn {
-  background: linear-gradient(180deg, #ff8c00, #cc4400);
-  border: 1px solid #ffd700;
+  background: linear-gradient(180deg, #8b2512, #5a1408);
+  border: 1px solid #d4af37;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  padding: 4px 12px;
-  border-radius: 14px;
+  padding: 3px 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.end-combo-btn:hover {
+  background: linear-gradient(180deg, #b22e16, #7a1b0b);
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
 }
 
 .end-combo-btn:hover {
@@ -1397,15 +1393,17 @@ body::before {
     margin-top: 2px;
   }
 
-  /* 順序 2：中央棋盤區域（極大化滿版展開，高度完全符合） */
+  /* 順序 2：中央棋盤區域（極大化滿版展開，高度完全符合，縱向排列防抖動） */
   .board-center-area {
     order: 2;
     width: 100%;
     height: auto;
     margin: 2px 0;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: relative;
   }
 
   /* 棋盤邊框與內距精確預留半個棋子空間，確保最外側車馬砲兵字體 100% 完整無切邊 */
@@ -1474,17 +1472,19 @@ body::before {
     display: none;
   }
 
-  /* 連吃提示橫幅在手機端置頂居中且寬度自適應 */
+  /* 連吃提示橫幅在手機端為純絕對定位懸浮層，絕不推擠棋盤造成移位與抖動 */
   .combo-status-banner {
-    position: relative;
-    top: 0;
-    left: 0;
-    transform: none;
-    margin-bottom: 6px;
-    width: 100%;
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
+    width: max-content;
+    max-width: 95%;
     justify-content: center;
     font-size: 11px;
-    padding: 5px 10px;
+    padding: 3px 12px;
+    z-index: 100;
   }
 }
 
