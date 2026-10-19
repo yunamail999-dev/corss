@@ -244,20 +244,22 @@ class DarkChessEngine {
     return this.aborted;
   }
 
-  // 走法排序：吃大子優先
+  // 走法排序：吃大子優先，炮打大子優先
   orderMoves(moves) {
     const cells = this.cells;
     const key = (m) => {
       if (!(m & 1024)) return 0;
       const victim = Math.abs(cells[(m >> 5) & 31]);
       const attacker = Math.abs(cells[m & 31]);
-      return 1000 + BASE_VAL[victim] * 4 - BASE_VAL[attacker];
+      // 炮打士、將、象、車等大子給予極高排序權重
+      const cannonBonus = (attacker === 2 && victim >= 4) ? 600 : 0;
+      return 1000 + BASE_VAL[victim] * 4 - BASE_VAL[attacker] + cannonBonus;
     };
     return moves.sort((a, b) => key(b) - key(a));
   }
 
-  // 主搜尋（Negamax）；翻棋以「中性等待步」近似
-  search(s, depth, alpha, beta, ply) {
+  // 主搜尋（Negamax）；翻棋以「中性等待步」近似（禁止連續中性步）
+  search(s, depth, alpha, beta, ply, allowNull = true) {
     if (this.checkTime()) return 0;
     const si = s > 0 ? 0 : 1;
     if (this.alive[si] === 0) return -WIN + ply;
@@ -270,9 +272,9 @@ class DarkChessEngine {
 
     let best = -INF;
 
-    // 翻棋選項（視為中性步，讓搜尋不會誤以為對手被迫送子）
-    if (this.hiddenTotal > 0) {
-      const v = -this.search(-s, depth - 1, -beta, -alpha, ply + 1);
+    // 翻棋選項（視為中性步，禁止連續兩層走中性步避免虛擬循環）
+    if (this.hiddenTotal > 0 && allowNull) {
+      const v = -this.search(-s, depth - 1, -beta, -alpha, ply + 1, false);
       if (this.aborted) return 0;
       best = v;
       if (v > alpha) alpha = v;
@@ -570,6 +572,8 @@ export class SmallAI {
     E.useTimeLimit = false;
     const candidates = [];
 
+    // 檢查是否有吃敵方明棋的良機（特別是大子）
+    let hasHighValCapture = false;
     for (const item of completed) {
       if (!item.exact) continue;
       const f = item.m & 31;
@@ -577,20 +581,33 @@ export class SmallAI {
       const move = legal.find(lm =>
         lm.type !== 'dark_capture' && lm.fromR * COLS + lm.fromC === f && lm.toR * COLS + lm.toC === t
       );
-      if (move) candidates.push({ kind: 'move', move, score: item.score, f, t });
+      if (move) {
+        let score = item.score;
+        if (move.type === 'capture' && move.captured) {
+          const capRank = move.captured.rank || 1;
+          // 吃大子戰術加權：實質到手的大子（士6、將7、象5、車4、馬3、炮2）給予強烈獎勵
+          // 確保即時斬獲大子的實益絕不被深層搜尋長遠微小波折或翻棋虛擬期望值稀釋
+          const bonus = BASE_VAL[capRank] * 0.5;
+          score += bonus;
+          if (capRank >= 3 || move.isCannonShot) {
+            hasHighValCapture = true;
+          }
+        }
+        candidates.push({ kind: 'move', move, score, f, t });
+      }
     }
 
     if (E.hiddenTotal > 0) {
       const fd = cfg.flipDepth;
       const passShallow = E.valueAfter(s, fd);
 
-      // 我方已翻明棋太少時，鼓勵翻棋展開
+      // 如果場上已有現成吃大子良機（如炮打士、車吃馬等），大幅壓低翻棋慾望（吃子永遠優先於盲翻）
       let myRevealed = 0;
       for (let sq = 0; sq < NSQ; sq++) {
         const v = E.cells[sq];
         if (v !== 0 && v !== HIDDEN && (v > 0) === (s > 0)) myRevealed++;
       }
-      const flipBias = 4 + (myRevealed < 2 ? 20 : 0);
+      const flipBias = hasHighValCapture ? -120 : (4 + (myRevealed < 2 ? 15 : 0));
 
       for (const tile of unrevealed) {
         const t = tile.r * COLS + tile.c;
@@ -665,25 +682,38 @@ export class SmallAI {
     E.aborted = false;
     E.useTimeLimit = false;
 
-    // 停手的價值
-    const stopVal = E.valueAfter(s, depth);
-    let best = stopVal + 3; // 分數相近時寧可見好就收
+    // 停手的基準價值：當前盤面的靜態價值（避免深層搜尋因預期下回合仍可吃子導致 stopVal 虛高）
+    const currentStand = E.evaluate(s);
+
+    let bestScore = -INF;
     let bestMove = null;
 
     for (const mv of captures) {
       const t = mv.toR * COLS + mv.toC;
-      let v;
+      let score;
       if (mv.type === 'capture') {
+        // 明棋吃子：這是 100% 確定吃下敵方已知棋子
+        const victimRank = mv.captured ? mv.captured.rank : 1;
+        const victimVal = BASE_VAL[victimRank] || 100;
         const m = sq | (t << 5) | 1024;
         const cap = E.make(m);
-        v = E.combo(s, t, depth, -INF, INF, 1);
+        // 連吃後的新局面評估
+        const v = E.combo(s, t, depth, -INF, INF, 1);
         E.unmake(m, cap);
+        // 吃到大子（士、將、象、車、馬、炮）是即時斬獲，給予入袋加成
+        score = v + victimVal * 0.4;
+        // 只要不是送死（比原地停手差很多），或者吃到大子，就堅決連吃！
+        if (score >= currentStand - 50 && score > bestScore) {
+          bestScore = score;
+          bestMove = mv;
+        }
       } else {
-        v = E.darkCaptureEV(s, sq, t, depth);
-      }
-      if (v > best) {
-        best = v;
-        bestMove = mv;
+        // 翻吃暗棋：有踩雷風險，必須期望值顯著高於原地停手
+        const ev = E.darkCaptureEV(s, sq, t, depth);
+        if (ev > currentStand + 10 && ev > bestScore) {
+          bestScore = ev;
+          bestMove = mv;
+        }
       }
     }
     return bestMove;
