@@ -1242,7 +1242,8 @@ class XiangqiGameApp {
           this.handleGameOver(status);
         }
       } else {
-        // 小盤暗棋 AI
+        // 小盤暗棋 AI（同步連吃模式設定，讓 AI 搜尋正確建模連吃）
+        this.smallAI.comboMode = !!this.isComboMode;
         const bestAction = this.smallAI.getBestAction(this.smallBoard, this.aiSide);
         if (bestAction) {
           if (bestAction.action === 'flip') {
@@ -1266,6 +1267,9 @@ class XiangqiGameApp {
             if (status.isGameOver) {
               this.handleGameOver(status);
             }
+          } else if (bestAction.action === 'move' && bestAction.move.type === 'dark_capture') {
+            // AI 主動翻吃暗棋（經機率期望值評估後的冒險攻擊）
+            this.executeAiDarkCapture(bestAction.move);
           } else if (bestAction.action === 'move') {
             const isCapture = bestAction.move.type === 'capture' && bestAction.move.captured !== null;
 
@@ -1328,6 +1332,78 @@ class XiangqiGameApp {
         }
       }
     }, thinkDelay);
+  }
+
+  // AI 主動翻吃暗棋（第一手），成功時可接續連吃
+  executeAiDarkCapture(move) {
+    const board = this.smallBoard;
+    const finishTurn = () => {
+      this.isAiThinking = false;
+      this.dom.thinkingIndicator.classList.remove('active');
+      this.renderBoard();
+    };
+
+    sound.playFlip();
+    const res = board.attemptDarkCapture(move.fromR, move.fromC, move.toR, move.toC);
+
+    if (res.success) {
+      sound.playCapture();
+      this.recordSmallHistory({
+        type: 'move',
+        move,
+        captured: res.captured,
+        who: '電腦',
+        isDarkCapture: true
+      });
+      this.renderBoard();
+      this.triggerPieceCaptureEffect(move.toR, move.toC, res.captured);
+
+      const status = board.checkGameStatus();
+      if (status.isGameOver) {
+        finishTurn();
+        this.handleGameOver(status);
+        return;
+      }
+
+      // 連吃模式下若還有值得吃的目標，接續連擊
+      if (this.isComboMode &&
+          this.smallAI.getBestConsecutiveCapture(board, move.toR, move.toC, this.aiSide)) {
+        this.executeAiCombo(move.toR, move.toC, 2);
+        return;
+      }
+
+      board.endTurn();
+      finishTurn();
+      return;
+    }
+
+    // 翻吃失敗：踩雷陣亡或翻出己方棋子
+    if (res.attackerKilled) {
+      sound.playCapture();
+      this.recordSmallHistory({
+        type: 'attacker_killed',
+        who: '電腦',
+        attacker: res.attacker,
+        revealed: res.revealed
+      });
+    } else {
+      sound.playMove();
+      this.recordSmallHistory({
+        type: 'flip_fail',
+        who: '電腦',
+        r: move.toR,
+        c: move.toC,
+        piece: res.revealed,
+        reasonText: res.reason === 'friendly' ? '己方陣營' : '敵方大棋'
+      });
+    }
+
+    board.endTurn();
+    finishTurn();
+    const status = board.checkGameStatus();
+    if (status.isGameOver) {
+      this.handleGameOver(status);
+    }
   }
 
   // AI 循序連吃處理（依序吃子，呈現動態打擊感與音效）
