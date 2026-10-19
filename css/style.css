@@ -1149,81 +1149,47 @@ body::before {
    ============================================================ */
 
 /* ------------------------------------------------------------
-   1. 折疊橫屏 & 平板寬屏雙欄模式 (寬度 >= 821px 且橫向，或 1081px~1200px)
+   1. 折疊橫屏 & 平板寬屏模式 (821px ~ 1180px)
    ------------------------------------------------------------ */
-@media (min-width: 821px) and (orientation: landscape), (min-width: 1081px) and (max-width: 1200px) {
+@media (min-width: 821px) and (max-width: 1180px) {
   :root {
-    --cell-size: clamp(20px, min(calc((100dvh - 160px) / 10.4), calc((100vw - 320px) / 9.2), calc((100vh - 160px) / 10.4)), 82px);
+    --cell-size: clamp(20px, min(calc((100dvh - 150px) / 10.4), calc((100vw - 440px) / 9.2), calc((100vh - 150px) / 10.4)), 76px);
     --piece-size: calc(var(--cell-size) * 0.89);
-    --small-cell-size: clamp(26px, min(calc((100dvh - 160px) / 5.2), calc((100vw - 320px) / 8.5), calc((100vh - 160px) / 5.2)), 88px);
+    --small-cell-size: clamp(26px, min(calc((100dvh - 150px) / 5.2), calc((100vw - 440px) / 8.5), calc((100vh - 150px) / 5.2)), 82px);
   }
 
   .app-container {
-    padding: 8px 14px;
+    padding: 6px 12px;
     max-width: 100%;
   }
 
-  /* 雙欄大氣佈局：左側大棋盤 (佔 65%)，右側多功能控制欄 (佔 35%) */
+  /* 平板 3 欄緊湊對稱佈局：兩側收縮為 210px，中央棋盤完美獨立置中 */
   .game-workspace {
     display: grid;
-    grid-template-columns: 1fr 270px;
-    grid-template-areas: "board side";
-    gap: 14px;
+    grid-template-columns: 210px 1fr 210px;
+    gap: 10px;
     height: 100%;
     min-height: 0;
   }
 
-  .board-center-area {
-    grid-area: board;
-    height: 100%;
-  }
-
-  /* 穿透第一個 side-panel，使其卡片匯入右側 side 區域 */
-  .game-workspace > aside:first-of-type {
-    display: contents;
-  }
-
-  .game-workspace > aside:last-of-type {
-    grid-area: side;
-    display: flex;
-    flex-direction: column;
+  .side-panel {
     gap: 8px;
-    height: 100%;
     min-height: 0;
     overflow-y: auto;
   }
 
-  /* 右側卡片順序重新排列 */
-  #ai-card {
-    order: 1;
-  }
-
-  #player-card {
-    order: 2;
-  }
-
-  .action-buttons-box {
-    order: 3;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
+  .board-center-area {
+    height: 100%;
+    min-height: 0;
   }
 
   .action-btn {
-    flex: 1;
-    justify-content: center;
-    padding: 9px 8px;
-    font-size: 13px;
-  }
-
-  .history-panel {
-    order: 4;
-    flex: 1;
-    min-height: 140px;
+    padding: 8px 6px;
+    font-size: 12px;
   }
 
   .tips-box {
-    display: none; /* 折疊大屏收縮提示卡以確保棋譜完整高度 */
+    display: none; /* 平板收縮提示卡以確保棋譜完整空間 */
   }
 }
 
