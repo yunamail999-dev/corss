@@ -378,11 +378,25 @@ class XiangqiGameApp {
             <line x1="500" y1="700" x2="300" y2="900" class="diagonal-line" />
           </svg>
 
-          <!-- 楚河漢界字樣 -->
+          <!-- 楚河漢界字樣與古典硃砂篆刻印章 -->
           <div class="river-banner">
+            <span class="river-seal seal-chu">楚</span>
             <span class="river-text-left">楚河</span>
+            <span class="river-divider">❖</span>
             <span class="river-text-right">漢界</span>
+            <span class="river-seal seal-han">漢</span>
           </div>
+
+          <!-- 動態金絲走步軌跡層 -->
+          <svg class="board-trajectory-svg" id="large-trajectory-svg" viewBox="0 0 800 900">
+            <defs>
+              <linearGradient id="goldTrailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff4c2" stop-opacity="0.95" />
+                <stop offset="50%" stop-color="#d4af37" stop-opacity="1" />
+                <stop offset="100%" stop-color="#966a1e" stop-opacity="0.4" />
+              </linearGradient>
+            </defs>
+          </svg>
 
           <!-- 棋子與提示層 -->
           <div class="pieces-layer" id="large-pieces-layer"></div>
@@ -427,14 +441,50 @@ class XiangqiGameApp {
       }
     }
 
-    // 繪製最後一步落子標記
+    // 繪製最後一步落子標記與動態金絲流光軌跡
     if (board.moveHistory.length > 0) {
       const last = board.moveHistory[board.moveHistory.length - 1];
+
+      // 落子目標點外圈旋轉金色光環
       const marker = document.createElement('div');
       marker.className = 'last-move-marker';
       marker.style.top = `${last.toR * 11.111}%`;
       marker.style.left = `${last.toC * 12.5}%`;
       layer.appendChild(marker);
+
+      // 起始點淡雅金絲微光光環
+      const srcMarker = document.createElement('div');
+      srcMarker.className = 'last-move-source-marker';
+      srcMarker.style.top = `${last.fromR * 11.111}%`;
+      srcMarker.style.left = `${last.fromC * 12.5}%`;
+      layer.appendChild(srcMarker);
+
+      // 動態金絲走步軌跡線（以 SVG 二次貝茲曲線繪製流光）
+      const trajectorySvg = document.getElementById('large-trajectory-svg');
+      if (trajectorySvg) {
+        const x1 = last.fromC * 100;
+        const y1 = last.toC === last.fromC ? last.fromR * 100 : last.fromR * 100;
+        const x2 = last.toC * 100;
+        const y2 = last.toR * 100;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist > 5) {
+          const midX = (x1 + x2) / 2;
+          const midY = (y1 + y2) / 2;
+          // 向法向量方向適度微拱弧度
+          const curveOffset = Math.min(28, Math.max(12, dist * 0.12));
+          const cx = midX - (dy / dist) * curveOffset;
+          const cy = midY + (dx / dist) * curveOffset;
+
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+          path.setAttribute('class', 'trajectory-path');
+          trajectorySvg.appendChild(path);
+        }
+      }
     }
 
     // 繪製合法走步提示指示點

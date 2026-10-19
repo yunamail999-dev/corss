@@ -73,18 +73,35 @@
     0 -1px 2px rgba(0, 0, 0, 0.95);
 }
 
-/* 棋子被選取時的平移懸浮與柔和金芒 */
+/* 棋子懸停時的 3.5D 輕微提起感 */
+.chess-piece:hover:not(.selected) {
+  transform: translate(-50%, -53%) scale(1.04);
+  z-index: 20;
+}
+.chess-piece:hover:not(.selected) .piece-inner {
+  box-shadow: 
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 0 12px rgba(212, 175, 55, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px rgba(120, 85, 45, 0.35),
+    inset 0 0 0 2px #fbf5e8,
+    inset 0 0 0 4px #b8976a,
+    inset 0 0 0 5.5px #fbf5e8;
+}
+
+/* 棋子被選取時的 3.5D 平移懸浮與柔和金芒 */
 .chess-piece.selected {
   transform: translate(-50%, -58%) scale(1.1);
   z-index: 30;
 }
 .chess-piece.selected .piece-inner {
   box-shadow: 
-    0 0 18px rgba(255, 215, 0, 0.9),
+    0 0 22px rgba(255, 215, 0, 0.95),
+    0 12px 24px rgba(0, 0, 0, 0.55),
     inset 0 1px 2px rgba(255, 255, 255, 1),
     inset 0 0 0 2px #fbf5e8,
-    inset 0 0 0 4px #d4af37,
-    0 10px 20px rgba(0, 0, 0, 0.5);
+    inset 0 0 0 4px #d4af37;
   border-color: #ffd700;
   animation: pieceFloat 1.6s infinite ease-in-out alternate;
 }
@@ -101,7 +118,7 @@
   height: calc(var(--piece-size) * 1.15);
   border-radius: 50%;
   border: 2px dashed rgba(255, 215, 0, 0.85);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
   transform: translate(-50%, -50%);
   pointer-events: none;
   animation: rotateMarker 16s linear infinite;
@@ -113,42 +130,62 @@
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* 合法移動目標點指示（碧玉小光珠） */
+/* 最後一步起點標記（淡金絲微光光環） */
+.last-move-source-marker {
+  position: absolute;
+  width: calc(var(--piece-size) * 0.65);
+  height: calc(var(--piece-size) * 0.65);
+  border-radius: 50%;
+  border: 1.5px dashed rgba(212, 175, 55, 0.65);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* 合法移動目標點指示（水墨流金小蓮珠） */
 .move-dest-indicator {
   position: absolute;
-  width: calc(var(--piece-size) * 0.36);
-  height: calc(var(--piece-size) * 0.36);
+  width: calc(var(--piece-size) * 0.32);
+  height: calc(var(--piece-size) * 0.32);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #76ffc4 0%, #2ec87c 60%, #107542 100%);
-  box-shadow: 0 0 10px rgba(78, 240, 160, 0.85), 0 2px 4px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: radial-gradient(circle at 35% 30%, #fff7d6 0%, #d4af37 60%, #8b681e 100%);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.95), 0 2px 5px rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
   transform: translate(-50%, -50%);
   cursor: pointer;
   z-index: 25;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.2s ease;
+  animation: movePulse 1.8s infinite ease-in-out;
 }
 .move-dest-indicator:hover {
-  transform: translate(-50%, -50%) scale(1.35);
+  transform: translate(-50%, -50%) scale(1.45);
+  box-shadow: 0 0 18px rgba(255, 225, 110, 1), 0 3px 6px rgba(0, 0, 0, 0.5);
 }
 
-/* 吃子目標指示環（赤紅準星圈） */
+@keyframes movePulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+
+/* 吃子目標指示環（赤紅準星圈，肅殺果決） */
 .capture-dest-indicator {
   position: absolute;
-  width: calc(var(--piece-size) * 1.12);
-  height: calc(var(--piece-size) * 1.12);
+  width: calc(var(--piece-size) * 1.18);
+  height: calc(var(--piece-size) * 1.18);
   border-radius: 50%;
-  border: 3px solid #ff2a2a;
-  box-shadow: 0 0 16px rgba(255, 42, 42, 0.85);
+  border: 2.2px solid #e62222;
+  box-shadow: 0 0 18px rgba(230, 34, 34, 0.85), inset 0 0 8px rgba(230, 34, 34, 0.35);
   transform: translate(-50%, -50%);
   cursor: pointer;
   z-index: 26;
-  animation: capturePulse 1.2s infinite ease-in-out;
+  animation: capturePulse 1.3s infinite ease-in-out;
   pointer-events: none;
 }
 
 @keyframes capturePulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(1.0); opacity: 0.9; }
-  50% { transform: translate(-50%, -50%) scale(1.14); opacity: 0.55; }
+  0%, 100% { transform: translate(-50%, -50%) scale(1.0); opacity: 0.95; }
+  50% { transform: translate(-50%, -50%) scale(1.14); opacity: 0.6; }
 }
 
 /* 暗棋連吃翻吃目標指示（琥珀金火雷電瞄準圈） */
