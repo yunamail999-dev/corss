@@ -4,10 +4,10 @@
  */
 
 :root {
-  /* 視窗自適應尺寸：兼顧全覽與清晰大氣，防止文字切邊 */
-  --cell-size: clamp(34px, min(calc((100vh - 140px) / 10.4), calc((100vw - 520px) / 9.2)), 66px);
-  --piece-size: calc(var(--cell-size) * 0.88);
-  --small-cell-size: clamp(42px, min(calc((100vh - 160px) / 5.2), calc((100vw - 520px) / 8.6)), 74px);
+  /* 視窗自適應尺寸：兼顧全覽與清晰大氣，解除過度拘束的上限 */
+  --cell-size: clamp(34px, min(calc((100vh - 130px) / 10.2), calc((100vw - 500px) / 9.0)), 82px);
+  --piece-size: calc(var(--cell-size) * 0.89);
+  --small-cell-size: clamp(42px, min(calc((100vh - 150px) / 5.0), calc((100vw - 500px) / 8.4)), 88px);
 
   --bg-primary: #140e0a;
   --bg-secondary: #201710;
@@ -1142,14 +1142,13 @@ body::before {
    ============================================================ */
 
 /* ------------------------------------------------------------
-   1. 折疊展開大屏 & 平板模式 (768px ~ 1079px)
-      ★ 專屬適配 Samsung Galaxy Z Fold 7 展開內屏 (接近方形大屏)
+   1. 折疊橫屏 & 平板寬屏雙欄模式 (寬度 >= 821px 且橫向，或 1081px~1200px)
    ------------------------------------------------------------ */
-@media (min-width: 768px) and (max-width: 1079px) {
+@media (min-width: 821px) and (orientation: landscape), (min-width: 1081px) and (max-width: 1200px) {
   :root {
-    --cell-size: clamp(34px, min(calc((100vh - 150px) / 10.4), calc((100vw - 280px) / 9.2)), 64px);
-    --piece-size: calc(var(--cell-size) * 0.88);
-    --small-cell-size: clamp(40px, min(calc((100vh - 170px) / 5.2), calc((100vw - 280px) / 8.6)), 70px);
+    --cell-size: clamp(36px, min(calc((100dvh - 130px) / 10.2), calc((100vw - 280px) / 9.2), calc((100vh - 130px) / 10.2)), 82px);
+    --piece-size: calc(var(--cell-size) * 0.89);
+    --small-cell-size: clamp(42px, min(calc((100dvh - 150px) / 5.0), calc((100vw - 280px) / 8.5), calc((100vh - 150px) / 5.0)), 88px);
   }
 
   .app-container {
@@ -1157,7 +1156,7 @@ body::before {
     max-width: 100%;
   }
 
-  /* 轉為雙欄大氣佈局：左側大棋盤 (佔 65%)，右側多功能控制欄 (佔 35%) */
+  /* 雙欄大氣佈局：左側大棋盤 (佔 65%)，右側多功能控制欄 (佔 35%) */
   .game-workspace {
     display: grid;
     grid-template-columns: 1fr 270px;
@@ -1222,16 +1221,16 @@ body::before {
 }
 
 /* ------------------------------------------------------------
-   2. 手機窄屏模式 (寬度 <= 767px)
-      ★ 專屬適配 Samsung Galaxy Z Fold 7 外屏 (折疊狀態狹長屏 375~412px)
-      ★ 同步完美適配各主流直屏智慧手機 (iPhone, Galaxy, Pixel)
+   2. 折疊屏直向 (展開內屏 768~900px portrait) 與 手機單欄滿版模式 (<= 820px)
+      ★ 專屬適配 Samsung Galaxy Z Fold 7 展開豎握：上下對弈、棋盤頂天立地
+      ★ 核心重點：棋盤徹底撐大，以高度符合為基準，剛剛好一屏盡收眼底
    ------------------------------------------------------------ */
-@media (max-width: 767px) {
+@media (max-width: 820px), (max-width: 1080px) and (orientation: portrait) {
   :root {
-    /* 雙向嚴格自適應：考慮棋子半徑凸出（除以 9.2）與縱向一屏全覽，字體絕不切邊 */
-    --cell-size: clamp(30px, min(calc((100vw - 32px) / 9.2), calc((100vh - 195px) / 10.4)), 60px);
-    --piece-size: calc(var(--cell-size) * 0.88);
-    --small-cell-size: clamp(34px, min(calc((100vw - 32px) / 8.6), calc((100vh - 195px) / 5.2)), 66px);
+    /* 雙向精密自適應：以動態視窗高度 100dvh 為基準，扣除上下狀態條精簡高度，棋盤全面撐大至高度符合！上限放寬至 88px */
+    --cell-size: clamp(32px, min(calc((100vw - 16px) / 9.6), calc((100dvh - 116px) / 10.4), calc((100vh - 116px) / 10.4)), 88px);
+    --piece-size: calc(var(--cell-size) * 0.89);
+    --small-cell-size: clamp(36px, min(calc((100vw - 18px) / 8.4), calc((100dvh - 116px) / 4.8), calc((100vh - 116px) / 4.8)), 92px);
   }
 
   /* 手機直屏支援平滑縱向滑動，避免固定高度產生元件擠壓 */
@@ -1252,7 +1251,7 @@ body::before {
     width: 100%;
     height: auto;
     min-height: 100vh;
-    padding: 4px 6px 20px;
+    padding: 4px 6px 16px;
     max-width: 100%;
   }
 
@@ -1397,12 +1396,12 @@ body::before {
     margin-top: 2px;
   }
 
-  /* 順序 2：中央棋盤區域（極大化滿版展開） */
+  /* 順序 2：中央棋盤區域（極大化滿版展開，高度完全符合） */
   .board-center-area {
     order: 2;
     width: 100%;
     height: auto;
-    margin: 4px 0;
+    margin: 2px 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1430,11 +1429,11 @@ body::before {
     border-radius: 4px;
   }
 
-  /* 順序 3：玩家狀態條（居棋盤正下方） */
+  /* 順序 3：玩家狀態條（居棋盤正下方，緊湊設計釋放空間） */
   #player-card {
     order: 3;
-    padding: 8px 12px;
-    gap: 4px;
+    padding: 6px 10px;
+    gap: 3px;
   }
 
   #player-card .card-header {
@@ -1489,13 +1488,13 @@ body::before {
 }
 
 /* ------------------------------------------------------------
-   3. 超窄屏極限安全防護 (寬度 <= 370px)
+   3. 超窄屏極限安全防護 (寬度 <= 360px)
    ------------------------------------------------------------ */
-@media (max-width: 370px) {
+@media (max-width: 360px) {
   :root {
-    --cell-size: clamp(28px, min(calc((100vw - 24px) / 9.2), calc((100vh - 180px) / 10.4)), 38px);
-    --piece-size: calc(var(--cell-size) * 0.88);
-    --small-cell-size: clamp(32px, min(calc((100vw - 24px) / 8.6), calc((100vh - 180px) / 5.2)), 44px);
+    --cell-size: clamp(28px, min(calc((100vw - 20px) / 9.6), calc((100dvh - 110px) / 10.4), calc((100vh - 110px) / 10.4)), 40px);
+    --piece-size: calc(var(--cell-size) * 0.89);
+    --small-cell-size: clamp(32px, min(calc((100vw - 20px) / 8.4), calc((100dvh - 110px) / 4.8), calc((100vh - 110px) / 4.8)), 46px);
   }
 
   .app-container {
