@@ -1194,11 +1194,10 @@ body::before {
 }
 
 /* ------------------------------------------------------------
-   2. 折疊屏直向 (展開內屏 768~900px portrait) 與 手機單欄滿版模式 (<= 820px)
-      ★ 專屬適配 Samsung Galaxy Z Fold 7 展開豎握：上下對弈、棋盤頂天立地
-      ★ 核心重點：棋盤徹底撐大，以高度符合為基準，剛剛好一屏盡收眼底
+   2. 豎屏模式專用 (手機直握與折疊展開豎握：上下對弈、棋盤頂天立地)
+      ★ 專屬適配 Samsung Galaxy Z Fold 7 展開豎握與各型號手機直屏
    ------------------------------------------------------------ */
-@media (max-width: 820px), (max-width: 1080px) and (orientation: portrait) {
+@media (orientation: portrait) and (max-width: 1080px) {
   :root {
     /* 雙向精密自適應：以動態視窗高度 100dvh 為基準，扣除上下狀態條精簡高度，棋盤全面撐大至高度符合！上限放寬至 88px */
     --cell-size: clamp(32px, min(calc((100vw - 16px) / 9.6), calc((100dvh - 116px) / 10.4), calc((100vh - 116px) / 10.4)), 88px);
@@ -1524,9 +1523,19 @@ body::before {
   }
 
   .game-workspace {
-    grid-template-columns: 200px 1fr 200px;
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: 200px 1fr 200px !important;
+    gap: 8px !important;
     align-items: center !important;
+  }
+
+  .side-panel {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .stats-card, #ai-card, .board-center-area, #player-card, .action-buttons-box, .history-panel {
+    order: unset !important;
   }
 
   .status-card {
